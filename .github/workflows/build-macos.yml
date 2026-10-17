@@ -1,0 +1,56 @@
+name: Build Apple Silicon OBS 32 plugin
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    runs-on: macos-15
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm Apple Silicon toolchain
+        run: |
+          test "$(uname -m)" = arm64
+          xcodebuild -version
+          cmake --version
+      - uses: actions/cache@v4
+        with:
+          path: .deps
+          key: ${{ github.repository }}-obs32-macos-arm64-${{ hashFiles('buildspec.json', 'cmake/common/buildspec_common.cmake') }}
+          restore-keys: ${{ github.repository }}-obs32-macos-arm64-
+      - name: Configure
+        run: cmake --preset macos-arm64
+      - name: Build
+        run: cmake --build --preset macos-arm64 --parallel 3
+      - name: Test core and all interface languages
+        run: |
+          qt="$PWD/.deps/obs-deps-qt6-2025-08-23-universal"
+          export DYLD_FRAMEWORK_PATH="$qt/lib:${DYLD_FRAMEWORK_PATH:-}"
+          export DYLD_LIBRARY_PATH="$qt/lib:$qt/bin:${DYLD_LIBRARY_PATH:-}"
+          cocoa="$(find "$qt" -name libqcocoa.dylib -print -quit)"
+          test -n "$cocoa"
+          export QT_QPA_PLATFORM_PLUGIN_PATH="$(dirname "$cocoa")"
+          ctest --preset macos-arm64 --stop-on-failure --repeat until-fail:3
+          grep -E 'PERF:|STRESS:' build_macos/Testing/Temporary/LastTest.log
+      - name: Package Apple Silicon bundle
+        run: |
+          cmake --install build_macos --config Release --prefix release/install
+          bash scripts/PackageMac.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OBS-Seeker-macos-arm64
+          path: |
+            dist/*-macos-arm64.zip
+            dist/SHA256SUMS-macos.txt
+          if-no-files-found: error
+          retention-days: 90

@@ -1,0 +1,75 @@
+name: Build Windows OBS 32 plugin
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache OBS and Qt build dependencies
+        uses: actions/cache@v4
+        with:
+          path: .deps
+          key: ${{ github.repository }}-obs32-windows-x64-${{ hashFiles('buildspec.json', 'cmake/common/buildspec_common.cmake') }}
+          restore-keys: ${{ github.repository }}-obs32-windows-x64-
+      - name: Configure
+        run: |
+          cmake --preset windows-x64
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build
+        run: |
+          cmake --build --preset windows-x64 --parallel
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Test scanner and dock
+        run: |
+          $taskBinDirs = Get-ChildItem -LiteralPath .deps -Directory -Recurse -Filter bin
+          $env:PATH = ($taskBinDirs.FullName -join ';') + ';' + $env:PATH
+          $taskWindowsPlatform = Get-ChildItem -LiteralPath .deps -Recurse -File -Filter qwindows.dll | Select-Object -First 1
+          if (-not $taskWindowsPlatform) { throw 'Qt Windows platform plugin is missing.' }
+          $env:QT_QPA_PLATFORM_PLUGIN_PATH = $taskWindowsPlatform.DirectoryName
+          $env:OBS_SEEKER_SETTINGS_SCREENSHOT = Join-Path $PWD 'build_x64/settings-preview.png'
+          ctest --preset windows-x64 --repeat until-fail:3
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content build_x64/Testing/Temporary/LastTest.log | Select-String 'PERF:|STRESS:'
+      - name: Package
+        run: |
+          cmake --install build_x64 --config Release --prefix release/install
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./scripts/PackagePlugin.ps1
+      - name: Upload installable plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: OBS-Seeker-windows-x64
+          path: |
+            dist/*.zip
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 90
+      - name: Upload settings preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: OBS-Seeker-settings-preview
+          path: build_x64/settings-preview.png
+          if-no-files-found: error
+          retention-days: 90
+      - name: Upload Windows test tools
+        uses: actions/upload-artifact@v4
+        with:
+          name: OBS-Seeker-windows-test-tools
+          path: |
+            build_x64/Release/OBS-Seeker-escape-tests.exe
+            build_x64/Release/POWERPNT.exe
+          if-no-files-found: error
+          retention-days: 7

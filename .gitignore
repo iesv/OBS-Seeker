@@ -1,0 +1,13 @@
+.deps/
+.runtime/
+build*/
+release/
+dist/
+*.user
+.vs/
+.idea/
+*.zip
+*.pdb
+*.dll
+settings.json
+cmake/.CMakeBuildNumber

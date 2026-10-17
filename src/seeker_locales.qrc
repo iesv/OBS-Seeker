@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/OBS-Seeker/locale">
+    <file alias="en-US.ini">../data/locale/en-US.ini</file>
+    <file alias="zh-CN.ini">../data/locale/zh-CN.ini</file>
+    <file alias="zh-TW.ini">../data/locale/zh-TW.ini</file>
+  </qresource>
+</RCC>

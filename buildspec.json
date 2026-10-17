@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "obs-studio": {
+      "version": "32.0.0",
+      "baseUrl": "https://github.com/obsproject/obs-studio/archive/refs/tags",
+      "label": "OBS 32 sources",
+      "hashes": {"windows-x64": "8b91b13f966d018ef2de20d74b85857374bac263f30e13ec1e9acb0212413b94", "macos": "6c73099d53aee7b57faa624431891901d9c84b2d93e284d27799fdc33868d113"}
+    },
+    "prebuilt": {
+      "version": "2025-08-23",
+      "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
+      "label": "Pre-Built obs-deps",
+      "hashes": {"windows-x64": "8de229cff6f1981508c0eb646b35e644633a5855787b9f5d3b90ae2aeb87ffc1", "macos": "9403bb43fb0a9bb215739a5659ca274fe884dbbbcd22bd9ca781c961fb041c42"}
+    },
+    "qt6": {
+      "version": "2025-08-23",
+      "baseUrl": "https://github.com/obsproject/obs-deps/releases/download",
+      "label": "OBS Qt6",
+      "hashes": {"windows-x64": "c62e82483bc7c0bf199e8ac3220c66a85a6e8a0cd69a05b6d44f873b830e415f", "macos": "990f11638b80a4509e14e8c315f6e4caa0861e37fcd3113a256fbff835ffca29"}
+    }
+  },
+  "platformConfig": {"macos": {"bundleId": "com.andy.OBS-Seeker"}},
+  "name": "OBS-Seeker",
+  "displayName": "OBS-Seeker",
+  "version": "7.5.0",
+  "author": "Andy",
+  "website": "https://github.com/iesv/OBS-Seeker",
+  "email": ""
+}
