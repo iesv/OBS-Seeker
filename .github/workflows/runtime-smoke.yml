@@ -1,0 +1,48 @@
+name: Validate plugin in OBS 32
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: 'Successful build workflow run ID for the current commit'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  obs-runtime:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: OBS-Seeker-windows-x64
+          path: .runtime/artifact
+          run-id: ${{ inputs.build_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Load the DLL and create the dock in real OBS
+        shell: pwsh
+        run: ./scripts/SmokeOBS.ps1
+      - name: Compare OBS without the plugin
+        shell: pwsh
+        run: ./scripts/SmokeOBS.ps1 -Baseline
+      - name: Verify the English dock title
+        shell: pwsh
+        run: ./scripts/SmokeOBS.ps1 -Locale en-US
+      - name: Upload OBS runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: OBS-Seeker-obs32-validation
+          path: |
+            .runtime/obs/config/obs-studio/logs/*.txt
+            .runtime/obs-baseline/config/obs-studio/logs/*.txt
+            .runtime/obs-en-US/config/obs-studio/logs/*.txt
+            .runtime/validation*.txt
+          if-no-files-found: warn
+          include-hidden-files: true
+          retention-days: 90

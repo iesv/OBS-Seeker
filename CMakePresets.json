@@ -1,0 +1,31 @@
+{
+  "version": 8,
+  "configurePresets": [{
+    "name": "windows-x64",
+    "displayName": "OBS 32 / Windows x64",
+    "generator": "Visual Studio 17 2022",
+    "architecture": "x64",
+    "binaryDir": "${sourceDir}/build_x64",
+    "cacheVariables": {"BUILD_TESTING": true}
+  }, {
+    "name": "macos-arm64",
+    "displayName": "OBS 32 / Apple Silicon",
+    "generator": "Xcode",
+    "binaryDir": "${sourceDir}/build_macos",
+    "cacheVariables": {
+      "BUILD_TESTING": true,
+      "CMAKE_OSX_ARCHITECTURES": "arm64",
+      "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
+      "CODESIGN_IDENTITY": "-",
+      "PLUGIN_BUILD_NUMBER": "1"
+    }
+  }],
+  "buildPresets": [
+    {"name": "windows-x64", "configurePreset": "windows-x64", "configuration": "Release"},
+    {"name": "macos-arm64", "configurePreset": "macos-arm64", "configuration": "Release"}
+  ],
+  "testPresets": [
+    {"name": "windows-x64", "configurePreset": "windows-x64", "configuration": "Release", "output": {"outputOnFailure": true}},
+    {"name": "macos-arm64", "configurePreset": "macos-arm64", "configuration": "Release", "output": {"outputOnFailure": true}}
+  ]
+}
